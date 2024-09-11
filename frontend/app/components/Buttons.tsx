@@ -1,3 +1,4 @@
+import { Tabs } from "./ProfileCard"
 
 export function PrimaryButton({ children, onClick }: {
     children: React.ReactNode,
@@ -8,15 +9,13 @@ export function PrimaryButton({ children, onClick }: {
     </button>
 }
 
-export function BlueButton({ children, onClick }: {
+export function BlueButton({ children, onClick, activeTab, tab }: {
     children: React.ReactNode,
-    onClick: () => void
+    onClick: () => void,
+    activeTab: Tabs,
+    tab: Tabs
 }) {
-    return (
-        <button type="button" className="text-white bg-[#1da1f2] hover:bg-[#1da1f2]/90 focus:ring-4 focus:outline-none focus:ring-[#1da1f2]/50 font-semibold rounded-lg text-md px-16 py-2.5 text-center inline-flex items-center dark:focus:ring-[#1da1f2]/55 me-2 mb-2">
-            { children }
-        </button>
-    )
+    return <button type="button" className={`${tab == activeTab ? "bg-[#1da1f2] hover:bg-[#1da1f2]/90 text-white" : "text-[#1da1f2] focus:outline-none bg-blue-100 rounded-lg border border-gray-200 hover:bg-blue-200"} font-medium rounded-xl text-md px-8 py-3 me-2 mb-2`} onClick={onClick}>{ children }</button>
 }
 
 export function LightBlueButton({ children, onClick }: {
@@ -24,7 +23,7 @@ export function LightBlueButton({ children, onClick }: {
     onClick: () => void
 }) {
     return (
-        <button type="button" className="py-2.5 px-16 me-2 mb-2 text-md font-semibold text-blue-700 focus:outline-none bg-blue-100 rounded-lg border border-gray-200 hover:bg-blue-200 focus:z-10 focus:ring-4 focus:ring-gray-100">
+        <button type="button" className="py-2.5 px-16 me-2 mb-2 text-md font-semibold text-blue-700 focus:outline-none bg-blue-100 rounded-lg border border-gray-200 hover:bg-blue-200 focus:z-10 focus:ring-4 focus:ring-gray-100" onClick={onClick}> 
             {children}
         </button>
     )

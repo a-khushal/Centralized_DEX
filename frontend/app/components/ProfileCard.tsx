@@ -1,10 +1,13 @@
 "use client"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation";
-import { BlueButton, LightBlueButton, LightButton } from "../components/Buttons";
-import { useEffect, useState } from "react";
+import { BlueButton, LightButton } from "../components/Buttons";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Image from 'next/image'
 import { TokenWithBalance, useTokens } from "../api/hooks/useTokens";
+import Swap from "./Swap";
+
+export type Tabs = "tokens" | "send" | "addfunds" | "withdraw" | 'swap';
 
 export default function ProfileCard({ publicKey }: {
     publicKey: string
@@ -12,6 +15,7 @@ export default function ProfileCard({ publicKey }: {
     const session = useSession();
     const router = useRouter();
     const { loading, tokenBalances } = useTokens(publicKey);
+    const [tab, setTab] = useState<Tabs>("tokens");
 
     if(session.status === 'loading') {
         return <div className="pt-10 flex justify-center items-center h-50%">
@@ -34,10 +38,15 @@ export default function ProfileCard({ publicKey }: {
         <div className="">
             <div className="max-w-4xl shadow-lg rounded-2xl bg-white w-full p-12">
                 <Greeting image={session.data?.user?.image ?? ""} name={session.data?.user?.name ?? ""}/>
-                <Balance publicKey={publicKey} totalBalance={tokenBalances?.totalBalance ?? 0}/>
+                <Balance publicKey={publicKey} totalBalance={tokenBalances?.totalBalance ?? 0} tab={tab} setTab={setTab}/>
             </div>
-            <div className="max-w-4xl p-4 bg-gray-50 rounded-2xl mt-3">
-                <Tokens loading={loading} tokenBalances={tokenBalances}/>
+            <div className="max-w-4xl p-4 bg-gray-100 rounded-2xl mt-4 flex justify-center">
+                { 
+                    tab == "tokens" ? 
+                    <Tokens loading={loading} tokenBalances={tokenBalances}/> : 
+                    ((tab == "send" || tab == "addfunds" || tab == "withdraw") ?  
+                    <div>We dont yet support this feature</div> : <Swap/>)
+                }
             </div>
         </div>
     </div> 
@@ -52,8 +61,16 @@ function Greeting({ image, name }: {image: string, name: string}) {
     </div>
 }
 
-function Balance({ publicKey, totalBalance }: { publicKey: string, totalBalance: number }) {
+function Balance({ publicKey, totalBalance, tab, setTab }: { publicKey: string, totalBalance: number, tab: Tabs, setTab: Dispatch<SetStateAction<Tabs>> }) {
+    const [activeTab, setActiveTab] = useState<Tabs>("tokens");
     const [copied, setCopied] = useState(false);
+    const tabButtons: { id: Tabs, name: string }[] = [
+        { id: "tokens", name: "Tokens" },
+        { id: "send", name: "Send" },
+        { id: "addfunds", name: "Add Funds" },
+        { id: "withdraw", name: "Withdraw" },
+        { id: "swap", name: "Swap" }
+    ];
 
     useEffect(() => {
         if(copied) {
@@ -75,7 +92,7 @@ function Balance({ publicKey, totalBalance }: { publicKey: string, totalBalance:
         </div>
         <div className="mt-5">
             <div className="flex justify-between items-center">
-                <div className="text-5xl font-bold">${totalBalance === 0 ? "0.00" : totalBalance?.toString()}<span className="text-4xl font-bold text-gray-500 ml-2">USD</span></div>
+                <div className="text-5xl font-bold">${totalBalance === 0 ? "0.00" : totalBalance?.toFixed(2).toString()}<span className="text-4xl font-bold text-gray-500 ml-2">USD</span></div>
                 <LightButton onClick={() => {
                     navigator.clipboard.writeText(publicKey);
                     setCopied(true);
@@ -91,18 +108,15 @@ function Balance({ publicKey, totalBalance }: { publicKey: string, totalBalance:
                 </LightButton>
             </div>
             <div className="flex pt-6">
-                <BlueButton onClick={() => {}}>
-                    Send
-                </BlueButton>
-                <LightBlueButton onClick={() => {}}>
-                    Add Funds
-                </LightBlueButton>
-                <LightBlueButton onClick={() => {}}>
-                    Withdraw
-                </LightBlueButton>
-                <LightBlueButton onClick={() => {}}>
-                    Swap
-                </LightBlueButton>
+                {tabButtons.map((tab, index) => (
+                    <BlueButton key={index} 
+                        onClick={() => 
+                        { setActiveTab(tab.id); setTab(tab.id)} } 
+                        activeTab={activeTab} tab={tab.id}
+                    >
+                        {tab.name}
+                    </BlueButton>
+                ))}
             </div>
         </div>
     </div>
@@ -138,11 +152,11 @@ function Tokens({ loading, tokenBalances}: {
                                             </div>
                                         </div>
                                         <div className="mt-3">
-                                            <div className="font-semibold">
-                                                {token.balance == "0" ? "0.00" : token.balance}
+                                            <div className="font-semibold flex justify-end">
+                                                {token.balance == "0" ? "0.00" : token.balance.toString().slice(0, 7)}
                                             </div>
-                                            <div>
-                                                {token.usdBalance == '0' ? "0.00" : token.usdBalance}
+                                            <div className="flex justify-end">
+                                                {token.usdBalance == '0' ? "0.00" : token.usdBalance.toString().slice(0, 7)}
                                             </div>
                                         </div>
                                     </div>
